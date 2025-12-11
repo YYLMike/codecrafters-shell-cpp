@@ -1,5 +1,8 @@
 #include <iostream>
+#include <filesystem>
 #include <string>
+#include <sstream>
+#include <system_error>
 
 constexpr char EXIT_CMD[] = "exit";
 constexpr char ECHO_CMD[] = "echo";
@@ -10,6 +13,27 @@ constexpr char COMMANDNOTFOUND_MSG[] = ": command not found";
 
 bool is_builtin (const std::string_view arg) {
     return  arg == EXIT_CMD || arg == ECHO_CMD || arg == TYPE_CMD;
+}
+
+bool is_path(const std::string_view arg, std::string& fullpath) {
+    // parse environment PATH to path_list
+    const std::string paths = getenv("PATH");
+    if (paths == "" || paths == "\n" || paths.empty()) {
+        return false;
+    }
+    std::error_code ec;
+    std::stringstream ss(paths);
+    std::string path{};
+    while (std::getline(ss, path, ':')) {
+        path += "/";
+        path += arg;
+        std::filesystem::file_status s = std::filesystem::status(path, ec);
+        if (!ec) {
+            fullpath = path;
+            return true;
+        }
+    }
+    return false;
 }
 
 std::string get_command(const std::string_view arg) {
@@ -27,15 +51,18 @@ int main() {
   std::cout << std::unitbuf;
   std::cerr << std::unitbuf;
 
-  // Print prompt
+  std::string user_in;
+  std::string command;
+  std::string arg;
+  std::string fullpath{};
   while (true) {
+    // Read
     std::cout << "$ ";
-    std::string user_in;
-
     std::getline(std::cin, user_in);
-    std::string command = get_command(user_in);
-    std::string arg = user_in.length() > command.length() ? user_in.substr(command.length()+1) : "";
+    command = get_command(user_in);
+    arg = user_in.length() > command.length() ? user_in.substr(command.length()+1) : "";
 
+    // Evaluate
     if (command == EXIT_CMD) {
         return 0;
     } else if (command == ECHO_CMD) {
@@ -43,12 +70,14 @@ int main() {
     } else if (command == TYPE_CMD) {
         if (is_builtin(arg)) {
             std::cout << arg << ISBUILTIN_MSG << "\n";
+        } else if (is_path(arg, fullpath)){
+            std::cout << arg << " is " << fullpath << "\n";
         } else {
             std::cout << arg << NOTFOUND_MSG << "\n";
         }
     } else {
         std::cout << user_in << COMMANDNOTFOUND_MSG << "\n";
     }
-  }
+  } // Loop
   return 0;
 }
