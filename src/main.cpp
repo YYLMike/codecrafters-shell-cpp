@@ -15,20 +15,35 @@ bool is_builtin (const std::string_view arg) {
     return  arg == EXIT_CMD || arg == ECHO_CMD || arg == TYPE_CMD;
 }
 
+bool is_executable(const std::string& path) {
+    std::error_code ec;
+    std::filesystem::file_status s = std::filesystem::status(path, ec);
+    if (ec) {
+        // file not exist
+        return false;
+    }
+    if (!std::filesystem::is_regular_file(s)) {
+        // not regular file, maybe directory or symlink
+        return false;
+    }
+    std::filesystem::perms prms = s.permissions();
+    bool executable = (prms & std::filesystem::perms::owner_exec) != std::filesystem::perms::none ||
+        (prms & std::filesystem::perms::group_exec) != std::filesystem::perms::none ||
+        (prms & std::filesystem::perms::others_exec) != std::filesystem::perms::none;
+    return executable;
+}
+
 bool is_path(const std::string_view arg, std::string& fullpath) {
-    // parse environment PATH to path_list
     const std::string paths = getenv("PATH");
     if (paths == "" || paths == "\n" || paths.empty()) {
         return false;
     }
-    std::error_code ec;
     std::stringstream ss(paths);
     std::string path{};
     while (std::getline(ss, path, ':')) {
         path += "/";
         path += arg;
-        std::filesystem::file_status s = std::filesystem::status(path, ec);
-        if (!ec) {
+        if (is_executable(path)) {
             fullpath = path;
             return true;
         }
@@ -54,7 +69,7 @@ int main() {
   std::string user_in;
   std::string command;
   std::string arg;
-  std::string fullpath{};
+  std::string fullpath;
   while (true) {
     // Read
     std::cout << "$ ";
