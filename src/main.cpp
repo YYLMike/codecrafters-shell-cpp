@@ -33,11 +33,12 @@ bool is_executable(const std::string& path) {
     return executable;
 }
 
-bool is_path(const std::string_view arg, std::string& fullpath) {
+bool is_from_path(const std::string_view arg, std::string& fullpath) {
     const std::string paths = getenv("PATH");
     if (paths == "" || paths == "\n" || paths.empty()) {
         return false;
     }
+    // handle single
     std::stringstream ss(paths);
     std::string path{};
     while (std::getline(ss, path, ':')) {
@@ -85,11 +86,13 @@ int main() {
     } else if (command == TYPE_CMD) {
         if (is_builtin(arg)) {
             std::cout << arg << ISBUILTIN_MSG << "\n";
-        } else if (is_path(arg, fullpath)){
+        } else if (is_from_path(arg, fullpath)){
             std::cout << arg << " is " << fullpath << "\n";
         } else {
             std::cout << arg << NOTFOUND_MSG << "\n";
         }
+    } else if (is_from_path(command, fullpath)) {
+        std::system(user_in.c_str());
     } else {
         std::cout << user_in << COMMANDNOTFOUND_MSG << "\n";
     }
