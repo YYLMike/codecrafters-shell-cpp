@@ -10,5 +10,5 @@ int main() {
   std::cout << "$ ";
   std::string command;
   std::cin >> command;
-  std::cout << command << "\n";
+  std::cout << command << ": not found\n";
 }
