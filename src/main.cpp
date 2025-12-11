@@ -34,7 +34,7 @@ int main() {
 
     std::getline(std::cin, user_in);
     std::string command = get_command(user_in);
-    std::string arg = user_in.substr(command.length()+1);
+    std::string arg = user_in.length() > command.length() ? user_in.substr(command.length()+1) : "";
 
     if (command == EXIT_CMD) {
         return 0;
