@@ -7,12 +7,14 @@
 constexpr char EXIT_CMD[] = "exit";
 constexpr char ECHO_CMD[] = "echo";
 constexpr char TYPE_CMD[] = "type";
+constexpr char PWD_CMD[] = "pwd";
+
 constexpr char ISBUILTIN_MSG[] = " is a shell builtin";
 constexpr char NOTFOUND_MSG[] = ": not found";
 constexpr char COMMANDNOTFOUND_MSG[] = ": command not found";
 
 bool is_builtin (const std::string_view arg) {
-    return  arg == EXIT_CMD || arg == ECHO_CMD || arg == TYPE_CMD;
+    return  arg == EXIT_CMD || arg == ECHO_CMD || arg == TYPE_CMD || arg == PWD_CMD;
 }
 
 bool is_executable(const std::string& path) {
@@ -50,6 +52,11 @@ bool is_from_path(const std::string_view arg, std::string& fullpath) {
         }
     }
     return false;
+}
+
+std::string get_curr_path() {
+    auto fpath = std::filesystem::current_path();
+    return fpath.string();
 }
 
 std::string get_command(const std::string_view arg) {
@@ -91,6 +98,9 @@ int main() {
         } else {
             std::cout << arg << NOTFOUND_MSG << "\n";
         }
+    } else if (command == PWD_CMD) {
+        // print full path
+        std::cout << get_curr_path() << "\n";
     } else if (is_from_path(command, fullpath)) {
         std::system(user_in.c_str());
     } else {
