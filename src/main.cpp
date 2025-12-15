@@ -8,13 +8,23 @@ constexpr char EXIT_CMD[] = "exit";
 constexpr char ECHO_CMD[] = "echo";
 constexpr char TYPE_CMD[] = "type";
 constexpr char PWD_CMD[] = "pwd";
+constexpr char CD_CMD[] = "cd";
 
 constexpr char ISBUILTIN_MSG[] = " is a shell builtin";
 constexpr char NOTFOUND_MSG[] = ": not found";
 constexpr char COMMANDNOTFOUND_MSG[] = ": command not found";
+constexpr char NOSUCHFILEORDIRECTORY[] = ": No such file or directory";
 
 bool is_builtin (const std::string_view arg) {
-    return  arg == EXIT_CMD || arg == ECHO_CMD || arg == TYPE_CMD || arg == PWD_CMD;
+    return arg == EXIT_CMD || arg == ECHO_CMD || arg == TYPE_CMD || arg == PWD_CMD || arg == CD_CMD;
+}
+
+bool change_directory(const std::string& path) {
+	if (std::filesystem::is_directory(path)) {
+		std::filesystem::current_path(std::filesystem::path(path));
+		return true;
+	}
+	return false;
 }
 
 bool is_executable(const std::string& path) {
@@ -99,8 +109,11 @@ int main() {
             std::cout << arg << NOTFOUND_MSG << "\n";
         }
     } else if (command == PWD_CMD) {
-        // print full path
         std::cout << get_curr_path() << "\n";
+    } else if (command == CD_CMD) {
+    	if (!change_directory(arg)) {
+     		std::cout << CD_CMD << ": " << arg << NOSUCHFILEORDIRECTORY << "\n";
+     	}
     } else if (is_from_path(command, fullpath)) {
         std::system(user_in.c_str());
     } else {
