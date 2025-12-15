@@ -20,6 +20,9 @@ bool is_builtin (const std::string_view arg) {
 }
 
 bool change_directory(const std::string& path) {
+	if (path == "~") {
+		return change_directory(getenv("HOME"));
+	}
 	if (std::filesystem::is_directory(path)) {
 		std::filesystem::current_path(std::filesystem::path(path));
 		return true;
@@ -27,10 +30,7 @@ bool change_directory(const std::string& path) {
 	return false;
 }
 
-bool is_executable(const std::string_view directory, const std::string_view base) {
-	std::string path{directory};
-	path += "/";
-	path += base;
+bool is_executable(const std::string_view path) {
 	std::error_code ec;
 	std::filesystem::file_status s = std::filesystem::status(path, ec);
 	if (ec) {
@@ -57,7 +57,9 @@ bool is_from_path(const std::string_view arg, std::string& fullpath) {
 	std::stringstream ss(paths);
 	std::string path{};
 	while (std::getline(ss, path, ':')) {
-		if (is_executable(path, arg)) {
+		path += "/";
+		path += arg;
+		if (is_executable(path)) {
 			fullpath = path;
 			return true;
 		}
