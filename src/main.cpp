@@ -27,7 +27,10 @@ bool change_directory(const std::string& path) {
 	return false;
 }
 
-bool is_executable(const std::string& path) {
+bool is_executable(const std::string_view directory, const std::string_view base) {
+	std::string path{directory};
+	path += "/";
+	path += base;
 	std::error_code ec;
 	std::filesystem::file_status s = std::filesystem::status(path, ec);
 	if (ec) {
@@ -54,9 +57,7 @@ bool is_from_path(const std::string_view arg, std::string& fullpath) {
 	std::stringstream ss(paths);
 	std::string path{};
 	while (std::getline(ss, path, ':')) {
-		path += "/";
-		path += arg;
-		if (is_executable(path)) {
+		if (is_executable(path, arg)) {
 			fullpath = path;
 			return true;
 		}
